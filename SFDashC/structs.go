@@ -194,6 +194,8 @@ func (entry TOCEntry) GetContent(toc *AtlasTOC) (content *TOCContent, err error)
 		fmt.Println(string(contents))
 		return
 	}
+
+	content.setContent(strings.Replace(content.getContent(), "\"/docs/", "\"https://developer.salesforce.com/docs/", 10000))
 	return
 }
 
@@ -205,4 +207,12 @@ func (entry TOCEntry) GetContentFilepath(toc *AtlasTOC, removeAnchor bool) strin
 	}
 
 	return fmt.Sprintf("atlas.%s.%s.meta/%s/%s", toc.Locale, toc.Deliverable, toc.Deliverable, relLink)
+}
+
+func (c *TOCContent) getContent() string {
+	return c.Content
+}
+
+func (c *TOCContent) setContent(content string) {
+	c.Content = content
 }

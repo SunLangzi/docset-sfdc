@@ -1,0 +1,15 @@
+{
+    "name": "Salesforce Lightning Components",
+    "version": "VERSION",
+    "archive": "Salesforce_Lightning_Components.tgz",
+    "author": {
+        "name": "mattgoldspink",
+        "link": "https://github.com/mattgoldspink"
+    },
+    "aliases": [
+        "lightning",
+        "salesforce", 
+        "sfdc"
+    ],
+    "specific_versions": ["40.0"]
+}

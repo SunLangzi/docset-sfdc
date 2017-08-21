@@ -9,7 +9,7 @@ Everything is wrapped with a Makefile and can be completely built by simply exec
 
 That's it!
 
-It will generate 3 docsets: Salesforce Apex, Salesforce Visualforce, and Salesforce Combined
+It will generate a Lightning docset
 
 Dependencies
 ------------

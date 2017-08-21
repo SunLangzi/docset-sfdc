@@ -4,17 +4,18 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
+	//"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
 // CSS Paths
-var cssBaseURL = "https://developer.salesforce.com/resource/stylesheets"
-var cssFiles = []string{"holygrail.min.css", "docs.min.css", "syntax-highlighter.min.css"}
+var cssFiles = []string{"holygrail.min.css", "docs.min.css"}
+var css2Files = []string{"dsc-default-font.css"}
 var buildDir = "build"
 
 var wg sync.WaitGroup
@@ -119,7 +120,13 @@ func main() {
 	for _, cssFile := range cssFiles {
 		throttle <- 1
 		wg.Add(1)
-		go downloadCSS(cssFile, &wg)
+		go downloadCSS(cssFile, "https://developer.salesforce.com/resource/stylesheets", &wg)
+	}
+
+	for _, cssFile := range css2Files {
+		throttle <- 1
+		wg.Add(1)
+		go downloadCSS(cssFile, "https://developer.salesforce.com/resources2/stylesheets", &wg)
 	}
 
 	// Init the Sqlite db
@@ -222,18 +229,21 @@ func downloadContent(entry TOCEntry, toc *AtlasTOC, wg *sync.WaitGroup) {
 		for _, cssFile := range cssFiles {
 			header += fmt.Sprintf("<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\">", cssFile)
 		}
-		header += "<style>body { padding: 15px; }</style>"
+		for _, cssFile := range css2Files {
+			header += fmt.Sprintf("<link rel=\"stylesheet\" type=\"text/css\" href=\"%s\">", cssFile)
+		}
+		header += "<script src=\"/resource/javascript/syntaxHighlighter/syntaxhighlighter.js\"></script><link rel=\"stylesheet\" href=\"/resource/javascript/syntaxHighlighter/theme.css\" /><style>body { padding: 15px; }</style><div class=\"docs-page\">"
 
 		defer ofile.Close()
 		_, err = ofile.WriteString(
-			header + content.Content,
+			header + content.Content + "</div><script>SyntaxHighlighter.highlight()</script>",
 		)
 		ExitIfError(err)
 	}
 	<-throttle
 }
 
-func downloadCSS(fileName string, wg *sync.WaitGroup) {
+func downloadCSS(fileName string, baseUrl string, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	filePath := filepath.Join(buildDir, fileName)
@@ -245,12 +255,17 @@ func downloadCSS(fileName string, wg *sync.WaitGroup) {
 		ExitIfError(err)
 		defer ofile.Close()
 
-		cssURL := cssBaseURL + "/" + fileName
+		cssURL := baseUrl + "/" + fileName
 		response, err := http.Get(cssURL)
 		ExitIfError(err)
 		defer response.Body.Close()
 
-		_, err = io.Copy(ofile, response.Body)
+		body, err := ioutil.ReadAll(response.Body)
+
+		s := string(body[:])
+		s2 := strings.Replace(s, "/resource", "./resource", 100)
+
+		_, err = ofile.WriteString(s2)
 		ExitIfError(err)
 	}
 
